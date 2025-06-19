@@ -30,6 +30,9 @@ public class ThirdPersonCamera : MonoBehaviour
             return;
         }
         currentDistance = distance;
+
+        Cursor.visible = false; // Menyembunyikan kursor
+        Cursor.lockState = CursorLockMode.Locked; // Mengunci kursor di tengah layar
     }
 
     void LateUpdate() // Gunakan LateUpdate agar kamera bergerak setelah karakter
