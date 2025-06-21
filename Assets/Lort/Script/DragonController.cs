@@ -28,14 +28,14 @@ public class DragonController : MonoBehaviour
     [SerializeField] private float verticalRampDownSpeed = 5f;
     [SerializeField] private float verticalInertia = 3f;
     private float verticalInputHoldTime = 0f;
-    private float calculatedVerticalSpeed;
     private float currentVerticalSpeed = 0f;
 
     [Header("Rotation Settings")]
-    [SerializeField] private float yawSpeed = 90f;
+    [SerializeField] private float yawSpeed = 90f; // Kecepatan putar YAW Player (global)
 
-    // Pengaturan untuk Rotasi VISUAL (Pitch & Roll)
+    // PENTING: Referensi ke GameObject VISUAL naga (child dari GameObject Dragon ini)
     [Header("Visual Rotation Settings")]
+    [SerializeField] private Transform dragonVisualsTransform; // Seret GameObject DragonVisuals ke sini di Inspector!
     [SerializeField] private float visualPitchAngle = 30f;
     [SerializeField] private float visualRollAngle = 45f;
     [SerializeField] private float visualRotationSmoothness = 10f;
@@ -54,26 +54,31 @@ public class DragonController : MonoBehaviour
     // Event yang dipanggil saat naga dinonaktifkan (misal, mendarat)
     public UnityEvent onDragonDeactivated;
 
-    // Referensi ke GameObject visual naga
-    private Transform dragonVisualsTransform;
-
     // Variabel untuk melacak target pitch dan roll saat ini
-    private Quaternion currentVisualLocalRotation;
     private float currentTargetPitch = 0f;
     private float currentTargetRoll = 0f;
 
-    // --- VARIABEL BARU UNTUK INPUT ACTIONS ---
+    // Referensi ke GameObject Player (Root)
+    private Transform playerRootTransform; // Akan diisi saat ActivateFlight
+
+    // --- VARIABEL UNTUK INPUT ACTIONS ---
     private PlayerInputActions playerInputActions;
-    private Vector2 moveInput;
-    private float verticalMovementRawInput; // Untuk Space/LControl
+    private float throttleInput;        // Input dari aksi 'Throttle' (Analog kiri Y / W/S)
+    private float yawInput;             // Input dari aksi 'Yaw' (Analog kiri X / A/D)
+    private float verticalFlightInput;  // Input dari aksi 'VerticalFlight' (Analog kanan Y / Space/LeftControl)
+
 
     void Awake()
     {
-        dragonVisualsTransform = transform.Find("DragonVisuals");
+        // Mencoba mencari DragonVisuals sebagai child dari GameObject ini (Dragon)
         if (dragonVisualsTransform == null)
         {
-            Debug.LogError("DragonController: Tidak menemukan GameObject 'DragonVisuals' sebagai child. Pastikan Anda sudah membuatnya!");
-            dragonVisualsTransform = this.transform;
+            dragonVisualsTransform = transform.Find("DragonVisuals");
+            if (dragonVisualsTransform == null)
+            {
+                Debug.LogError("DragonController: 'DragonVisualsTransform' belum diatur atau tidak ditemukan sebagai child bernama 'DragonVisuals'!" +
+                               "Seret GameObject model naga Anda (yang melakukan rotasi visual) ke slot ini di Inspector.", this);
+            }
         }
 
         if (mainCamera == null)
@@ -85,34 +90,39 @@ public class DragonController : MonoBehaviour
             }
         }
 
-        // --- INISIALISASI INPUT ACTIONS ---
         playerInputActions = new PlayerInputActions();
 
-        // Bind aksi Move (untuk horizontal dan vertikal pergerakan naga)
-        playerInputActions.Player.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
-        playerInputActions.Player.Move.canceled += ctx => moveInput = Vector2.zero;
+        // Bind aksi dari Action Map 'DragonFlight'
+        playerInputActions.DragonFlight.Throttle.performed += ctx => throttleInput = ctx.ReadValue<float>();
+        playerInputActions.DragonFlight.Throttle.canceled += ctx => throttleInput = 0f;
 
-        // Bind aksi Climb (Space)
-        playerInputActions.Player.Jump.started += ctx => verticalMovementRawInput = 1f;
-        playerInputActions.Player.Jump.canceled += ctx => verticalMovementRawInput = 0f;
+        playerInputActions.DragonFlight.Yaw.performed += ctx => yawInput = ctx.ReadValue<float>();
+        playerInputActions.DragonFlight.Yaw.canceled += ctx => yawInput = 0f;
 
-        // Bind aksi Dive (LeftControl)
-        playerInputActions.Player.Crouch.started += ctx => verticalMovementRawInput = -1f;
-        playerInputActions.Player.Crouch.canceled += ctx => verticalMovementRawInput = 0f;
+        playerInputActions.DragonFlight.VerticalFlight.performed += ctx => verticalFlightInput = ctx.ReadValue<float>();
+        playerInputActions.DragonFlight.VerticalFlight.canceled += ctx => verticalFlightInput = 0f;
+
+        playerInputActions.DragonFlight.ToggleFlight.performed += ctx => ToggleFlight();
     }
 
     void OnEnable()
     {
-        playerInputActions.Enable();
+        // DragonController ini aktif saat naga dinaiki.
+        // Di sini kita pastikan playerRootTransform sudah diatur jika OnEnable dipanggil setelah parenting.
+        if (transform.parent != null)
+        {
+            playerRootTransform = transform.parent;
+        }
     }
 
     void OnDisable()
     {
-        playerInputActions.Disable();
+        playerInputActions.DragonFlight.Disable();
     }
 
     void Start()
     {
+        // DragonController dimulai dalam keadaan non-aktif saat game dimulai
         isFlightActivated = false;
         CurrentSpeed = 0f;
         verticalInputHoldTime = 0f;
@@ -121,101 +131,119 @@ public class DragonController : MonoBehaviour
         {
             dragonVisualsTransform.localRotation = Quaternion.identity;
         }
-        currentVisualLocalRotation = Quaternion.identity;
+        currentTargetPitch = 0f;
+        currentTargetRoll = 0f;
 
         if (mainCamera != null)
         {
             mainCamera.fieldOfView = defaultCameraFOV;
         }
+
+        // Nonaktifkan DragonController ini secara default saat Start
+        enabled = false;
     }
 
-    public void ActivateFlight()
+    // Dipanggil oleh PlayerInteraction saat naga dinaiki
+    public void ActivateFlight(Transform playerRoot)
     {
         if (!isFlightActivated)
         {
             isFlightActivated = true;
+            enabled = true; // Aktifkan script ini
+            playerRootTransform = playerRoot; // Simpan referensi ke Player root
+
+            playerInputActions.DragonFlight.Enable(); // Aktifkan Action Map DragonFlight
+
             CurrentSpeed = 0f;
             verticalInputHoldTime = 0f;
             currentVerticalSpeed = 0f;
             if (dragonVisualsTransform != null)
             {
-                dragonVisualsTransform.localRotation = Quaternion.identity;
+                dragonVisualsTransform.localRotation = Quaternion.identity; // Reset visual naga
             }
-            currentVisualLocalRotation = Quaternion.identity;
+            currentTargetPitch = 0f;
+            currentTargetRoll = 0f;
             Debug.Log(gameObject.name + ": Penerbangan diaktifkan!");
         }
     }
 
+    // Dipanggil oleh ToggleFlight atau PlayerInteraction saat naga dinonaktifkan
     public void DeactivateFlight()
     {
         if (isFlightActivated)
         {
             isFlightActivated = false;
+            enabled = false; // Nonaktifkan script ini
+            playerInputActions.DragonFlight.Disable(); // Nonaktifkan Action Map DragonFlight
+
             CurrentSpeed = 0f;
             verticalInputHoldTime = 0f;
             currentVerticalSpeed = 0f;
             Debug.Log(gameObject.name + ": Penerbangan dinonaktifkan.");
-            onDragonDeactivated.Invoke();
+            onDragonDeactivated.Invoke(); // Panggil event untuk PlayerInteraction
+
             if (dragonVisualsTransform != null)
             {
-                dragonVisualsTransform.localRotation = Quaternion.identity;
+                dragonVisualsTransform.localRotation = Quaternion.identity; // Reset visual naga
             }
-            currentVisualLocalRotation = Quaternion.identity;
+            currentTargetPitch = 0f;
+            currentTargetRoll = 0f;
 
             if (mainCamera != null)
             {
                 mainCamera.fieldOfView = defaultCameraFOV;
             }
+
+            playerRootTransform = null; // Hapus referensi Player root
         }
+    }
+
+    private void ToggleFlight()
+    {
+        if (isFlightActivated)
+        {
+            DeactivateFlight();
+        }
+        // else
+        // {
+        //     // Jangan aktifkan flight dari sini, hanya dari PlayerInteraction
+        //     // Ini untuk mencegah naga tiba-tiba terbang tanpa interaksi yang benar
+        // }
     }
 
     void Update()
     {
-        if (isFlightActivated)
+        if (playerRootTransform == null)
         {
-            HandleFlightInput();
-            UpdateCameraFOV();
-
-            transform.parent.position = transform.position;
-            transform.parent.rotation = transform.rotation;
-
-            transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
+            Debug.LogError("DragonController: Player Root Transform belum diatur! Tidak bisa menggerakkan naga.", this);
+            DeactivateFlight(); // Kembali ke kondisi non-terbang
+            return;
         }
+
+        HandleFlightInput();
+        UpdateCameraFOV();
     }
 
     void HandleFlightInput()
     {
-        // --- MENGGUNAKAN INPUT ACTIONS UNTUK MOVEMENT VERTIKAL (FORWARD/BACKWARD) ---
-        float verticalInput = moveInput.y;
+        // --- MENGGERAKKAN PLAYER (ROOT) ---
 
-        float targetBaseSpeed;
-        if (verticalInput > 0)
-        {
-            targetBaseSpeed = forwardSpeed;
-        }
-        else if (verticalInput < 0)
-        {
-            targetBaseSpeed = brakeSpeed;
-        }
-        else
-        {
-            targetBaseSpeed = 0f;
-        }
+        // Throttle (Maju/Mundur/Rem)
+        float throttleAxis = throttleInput;
 
-        if (verticalInput > 0)
+        if (throttleAxis > 0)
         {
             CurrentSpeed = Mathf.Min(CurrentSpeed + acceleration * Time.deltaTime, forwardSpeed);
         }
-        else if (verticalInput < 0)
+        else if (throttleAxis < 0)
         {
             if (CurrentSpeed > 0)
             {
-                CurrentSpeed = Mathf.Max(CurrentSpeed - brakeAcceleration * Time.deltaTime, 0f);
+                CurrentSpeed = Mathf.Max(CurrentSpeed + throttleAxis * brakeAcceleration * Time.deltaTime, 0f);
             }
             else
             {
-                CurrentSpeed = Mathf.Max(CurrentSpeed - acceleration * Time.deltaTime, reverseSpeed);
+                CurrentSpeed = Mathf.Max(CurrentSpeed + throttleAxis * acceleration * Time.deltaTime, reverseSpeed);
             }
         }
         else
@@ -243,24 +271,25 @@ public class DragonController : MonoBehaviour
             CurrentSpeed = Mathf.Min(CurrentSpeed, forwardSpeed * maxDiveSpeedMultiplier);
         }
 
-        if (verticalInput == 0)
+        if (throttleAxis == 0)
         {
             CurrentSpeed = Mathf.Clamp(CurrentSpeed, 0f, forwardSpeed);
         }
-        else if (CurrentSpeed < reverseSpeed && verticalInput >= 0)
+        else if (CurrentSpeed < reverseSpeed && throttleAxis >= 0)
         {
             CurrentSpeed = Mathf.Lerp(CurrentSpeed, 0f, Time.deltaTime * deceleration);
         }
 
-        transform.Translate(Vector3.forward * CurrentSpeed * Time.deltaTime, Space.Self);
-
-        // --- MENGGUNAKAN INPUT ACTIONS UNTUK MOVEMENT HORIZONTAL (YAW) ---
-        float horizontalInput = moveInput.x;
+        // --- Rotasi Yaw (Belok Kiri/Kanan) pada PLAYER (GLOBAL ROTATION) ---
+        float horizontalInput = yawInput;
         float yawAmount = horizontalInput * yawSpeed * Time.deltaTime;
-        transform.Rotate(Vector3.up, yawAmount, Space.Self);
+        playerRootTransform.Rotate(Vector3.up, yawAmount, Space.Self); // Putar GameObject Player (Root)
 
-        // --- MENGGUNAKAN VARIABEL BARU UNTUK VERTICAL MOVEMENT (Climb/Dive) ---
-        if (verticalMovementRawInput != 0)
+        // --- Pergerakan Maju pada PLAYER (ROOT) ---
+        playerRootTransform.Translate(Vector3.forward * CurrentSpeed * Time.deltaTime, Space.Self); // Gerakkan GameObject Player (Root)
+
+        // --- Pergerakan Vertikal pada PLAYER (ROOT) ---
+        if (verticalFlightInput != 0)
         {
             verticalInputHoldTime += Time.deltaTime;
             verticalInputHoldTime = Mathf.Clamp(verticalInputHoldTime, 0f, verticalRampUpTime);
@@ -272,31 +301,41 @@ public class DragonController : MonoBehaviour
         }
 
         float verticalRampFactor = Mathf.Clamp01(verticalInputHoldTime / verticalRampUpTime);
-
-        float normalizedCurrentSpeed = Mathf.InverseLerp(0, forwardSpeed, Mathf.Abs(CurrentSpeed));
-
-        float currentSpeedInfluence = normalizedCurrentSpeed * (maxVerticalSpeedFactor * forwardSpeed - minVerticalSpeed);
+        float normalizedCurrentFlightSpeed = Mathf.InverseLerp(0, forwardSpeed, Mathf.Abs(CurrentSpeed));
+        float currentSpeedInfluence = normalizedCurrentFlightSpeed * (maxVerticalSpeedFactor * forwardSpeed - minVerticalSpeed);
         float baseVerticalSpeed = minVerticalSpeed + currentSpeedInfluence;
-
         float targetVerticalSpeed = baseVerticalSpeed * (1f + verticalRampFactor * 2f);
         targetVerticalSpeed = Mathf.Clamp(targetVerticalSpeed, minVerticalSpeed, forwardSpeed * maxVerticalSpeedFactor * 3f);
 
         float lerpSpeedVertical = verticalRampDownSpeed;
-        if (Mathf.Sign(verticalMovementRawInput) != Mathf.Sign(currentVerticalSpeed) && currentVerticalSpeed != 0)
+        if (Mathf.Sign(verticalFlightInput) != Mathf.Sign(currentVerticalSpeed) && currentVerticalSpeed != 0)
         {
             lerpSpeedVertical = verticalInertia;
         }
 
-        currentVerticalSpeed = Mathf.Lerp(currentVerticalSpeed, verticalMovementRawInput * targetVerticalSpeed, Time.deltaTime * lerpSpeedVertical);
+        currentVerticalSpeed = Mathf.Lerp(currentVerticalSpeed, verticalFlightInput * targetVerticalSpeed, Time.deltaTime * lerpSpeedVertical);
 
-        transform.Translate(Vector3.up * currentVerticalSpeed * Time.deltaTime, Space.World);
+        playerRootTransform.Translate(Vector3.up * currentVerticalSpeed * Time.deltaTime, Space.World); // Gerakkan GameObject Player (Root) secara vertikal
 
+        // --- VISUAL ROTATION (Pitch & Roll) pada DRAGONVISUALS ---
         if (dragonVisualsTransform != null)
         {
+            // Pitch (dari input VerticalFlight)
             float visualRotationRampFactorPitch = Mathf.Clamp01(verticalInputHoldTime / visualRotationRampUpTime);
+            float speedInfluenceFactor = Mathf.Lerp(minVisualRotationFactor, 1f, normalizedCurrentFlightSpeed);
+            float calculatedPitchAngle = visualPitchAngle * speedInfluenceFactor * (1f + visualRotationRampFactorPitch * 0.5f);
 
+            float lerpSpeedVisualPitch = visualRotationSmoothness;
+            if (Mathf.Sign(-verticalFlightInput) != Mathf.Sign(currentTargetPitch) && currentTargetPitch != 0)
+            {
+                lerpSpeedVisualPitch = visualRotationInertia;
+            }
+            currentTargetPitch = Mathf.Lerp(currentTargetPitch, -verticalFlightInput * calculatedPitchAngle, Time.deltaTime * lerpSpeedVisualPitch);
+
+            // Roll (dari input Yaw)
+            float horizontalInputForRoll = yawInput;
             float horizontalInputHoldTime = 0f;
-            if (horizontalInput != 0) // Menggunakan horizontalInput dari moveInput
+            if (horizontalInputForRoll != 0)
             {
                 horizontalInputHoldTime += Time.deltaTime;
                 horizontalInputHoldTime = Mathf.Clamp(horizontalInputHoldTime, 0f, visualRotationRampUpTime);
@@ -307,29 +346,19 @@ public class DragonController : MonoBehaviour
                 horizontalInputHoldTime = Mathf.Max(horizontalInputHoldTime, 0f);
             }
             float rollRampFactor = Mathf.Clamp01(horizontalInputHoldTime / visualRotationRampUpTime);
-
-            float speedInfluenceFactor = Mathf.Lerp(minVisualRotationFactor, 1f, normalizedCurrentSpeed);
-
-            float calculatedPitchAngle = visualPitchAngle * speedInfluenceFactor * (1f + visualRotationRampFactorPitch * 0.5f);
             float calculatedRollAngle = visualRollAngle * speedInfluenceFactor * (1f + rollRampFactor * 0.5f);
 
-            float lerpSpeedVisualPitch = visualRotationSmoothness;
-            if (Mathf.Sign(-verticalMovementRawInput) != Mathf.Sign(currentTargetPitch) && currentTargetPitch != 0)
-            {
-                lerpSpeedVisualPitch = visualRotationInertia;
-            }
-            currentTargetPitch = Mathf.Lerp(currentTargetPitch, -verticalMovementRawInput * calculatedPitchAngle, Time.deltaTime * lerpSpeedVisualPitch);
-
             float lerpSpeedVisualRoll = visualRotationSmoothness;
-            if (Mathf.Sign(-horizontalInput) != Mathf.Sign(currentTargetRoll) && currentTargetRoll != 0)
+            if (Mathf.Sign(-horizontalInputForRoll) != Mathf.Sign(currentTargetRoll) && currentTargetRoll != 0)
             {
                 lerpSpeedVisualRoll = visualRotationInertia;
             }
-            currentTargetRoll = Mathf.Lerp(currentTargetRoll, -horizontalInput * calculatedRollAngle, Time.deltaTime * lerpSpeedVisualRoll);
+            currentTargetRoll = Mathf.Lerp(currentTargetRoll, -horizontalInputForRoll * calculatedRollAngle, Time.deltaTime * lerpSpeedVisualRoll);
 
             currentTargetPitch = Mathf.Clamp(currentTargetPitch, -90f, 90f);
             currentTargetRoll = Mathf.Clamp(currentTargetRoll, -90f, 90f);
 
+            // Terapkan rotasi VISUAL LOKAL pada DragonVisualsTransform
             Quaternion targetVisualRotation = Quaternion.Euler(currentTargetPitch, 0f, currentTargetRoll);
 
             dragonVisualsTransform.localRotation = Quaternion.Slerp(
@@ -340,7 +369,6 @@ public class DragonController : MonoBehaviour
         }
     }
 
-    // --- Fungsi Update Kamera (Hanya FOV) ---
     void UpdateCameraFOV()
     {
         if (mainCamera == null) return;

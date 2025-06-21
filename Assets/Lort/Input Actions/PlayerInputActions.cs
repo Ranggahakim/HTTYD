@@ -80,6 +80,24 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""RightStick"",
+                    ""type"": ""Value"",
+                    ""id"": ""46ae7f53-b897-4ba1-8eda-cd7ed0e2fe3c"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Interact"",
+                    ""type"": ""Button"",
+                    ""id"": ""3cb7925e-6a50-4eab-b4cd-fb5396fbcdc5"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -247,6 +265,39 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""Crouch"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2144c1dc-e66c-4bd6-be29-b30ad43e3b15"",
+                    ""path"": ""<Gamepad>/rightStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RightStick"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e55d3a12-39db-4ff3-a159-456dbd398880"",
+                    ""path"": ""<Keyboard>/f"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0bca2662-127e-4c33-b7a3-eaacce0061d0"",
+                    ""path"": ""<Gamepad>/buttonNorth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -289,6 +340,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Look"",
+                    ""type"": ""Value"",
+                    ""id"": ""235acf99-147b-499e-9091-0866fb9b307a"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -297,7 +357,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""id"": ""cb55c06d-224c-4387-9135-d0a09c7f17b8"",
                     ""path"": ""<Keyboard>/w"",
                     ""interactions"": ""Press"",
-                    ""processors"": ""Normalize(max=1)"",
+                    ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Throttle"",
                     ""isComposite"": false,
@@ -308,7 +368,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""id"": ""e7743b79-40a9-4393-aab0-7fdb8cbf0b75"",
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": ""Press"",
-                    ""processors"": ""Normalize(max=-1)"",
+                    ""processors"": ""Invert"",
                     ""groups"": """",
                     ""action"": ""Throttle"",
                     ""isComposite"": false,
@@ -316,21 +376,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""b32446fb-52a0-4d38-82da-bb3f2ff4a165"",
-                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""id"": ""a733e7b0-4126-419c-8019-4df0c21a3128"",
+                    ""path"": ""<Gamepad>/leftStick/y"",
                     ""interactions"": """",
-                    ""processors"": ""Normalize(max=1)"",
-                    ""groups"": """",
-                    ""action"": ""Throttle"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""31eae775-157c-4d53-82a7-dc367c8828a5"",
-                    ""path"": ""<Gamepad>/leftTrigger"",
-                    ""interactions"": """",
-                    ""processors"": ""Normalize(max=-1)"",
+                    ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Throttle"",
                     ""isComposite"": false,
@@ -341,7 +390,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""id"": ""c9c35e6c-c0fc-4641-83f9-4d0759bcf2d2"",
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": ""Press"",
-                    ""processors"": ""Normalize(max=-1)"",
+                    ""processors"": ""Invert"",
                     ""groups"": """",
                     ""action"": ""Yaw"",
                     ""isComposite"": false,
@@ -374,7 +423,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""id"": ""14935ecb-44fe-48e1-a224-18b58342ee73"",
                     ""path"": ""<Keyboard>/space"",
                     ""interactions"": ""Press"",
-                    ""processors"": ""Normalize(max=1)"",
+                    ""processors"": """",
                     ""groups"": """",
                     ""action"": ""VerticalFlight"",
                     ""isComposite"": false,
@@ -385,7 +434,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""id"": ""140f4882-bf02-4dda-b9d6-6d307f29631c"",
                     ""path"": ""<Keyboard>/leftCtrl"",
                     ""interactions"": ""Press"",
-                    ""processors"": ""Normalize(max=-1)"",
+                    ""processors"": ""Invert"",
                     ""groups"": """",
                     ""action"": ""VerticalFlight"",
                     ""isComposite"": false,
@@ -393,21 +442,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""a3bc5812-5cd2-485e-9596-50ee1d68c0ca"",
-                    ""path"": ""<Gamepad>/rightShoulder"",
+                    ""id"": ""0b81796a-836e-421b-8a8b-cd5fb0dbe18f"",
+                    ""path"": ""<Gamepad>/rightStick/y"",
                     ""interactions"": """",
-                    ""processors"": ""Normalize(max=1)"",
-                    ""groups"": """",
-                    ""action"": ""VerticalFlight"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""89bd9f78-9eb7-472a-9425-f71fa623880f"",
-                    ""path"": ""<Gamepad>/leftShoulder"",
-                    ""interactions"": """",
-                    ""processors"": ""Normalize(max=-1)"",
+                    ""processors"": """",
                     ""groups"": """",
                     ""action"": ""VerticalFlight"",
                     ""isComposite"": false,
@@ -434,6 +472,28 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""ToggleFlight"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5a3d8926-f60f-441e-bc7e-f329748c24b2"",
+                    ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Look"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1f7142cb-bea7-4fd8-be12-a52b59eb3abc"",
+                    ""path"": ""<Gamepad>/rightStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Look"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -448,12 +508,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Player_Jump = m_Player.FindAction("Jump", throwIfNotFound: true);
         m_Player_Run = m_Player.FindAction("Run", throwIfNotFound: true);
         m_Player_Crouch = m_Player.FindAction("Crouch", throwIfNotFound: true);
+        m_Player_RightStick = m_Player.FindAction("RightStick", throwIfNotFound: true);
+        m_Player_Interact = m_Player.FindAction("Interact", throwIfNotFound: true);
         // DragonFlight
         m_DragonFlight = asset.FindActionMap("DragonFlight", throwIfNotFound: true);
         m_DragonFlight_Throttle = m_DragonFlight.FindAction("Throttle", throwIfNotFound: true);
         m_DragonFlight_Yaw = m_DragonFlight.FindAction("Yaw", throwIfNotFound: true);
         m_DragonFlight_VerticalFlight = m_DragonFlight.FindAction("VerticalFlight", throwIfNotFound: true);
         m_DragonFlight_ToggleFlight = m_DragonFlight.FindAction("ToggleFlight", throwIfNotFound: true);
+        m_DragonFlight_Look = m_DragonFlight.FindAction("Look", throwIfNotFound: true);
     }
 
     ~@PlayerInputActions()
@@ -527,6 +590,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Jump;
     private readonly InputAction m_Player_Run;
     private readonly InputAction m_Player_Crouch;
+    private readonly InputAction m_Player_RightStick;
+    private readonly InputAction m_Player_Interact;
     public struct PlayerActions
     {
         private @PlayerInputActions m_Wrapper;
@@ -537,6 +602,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         public InputAction @Jump => m_Wrapper.m_Player_Jump;
         public InputAction @Run => m_Wrapper.m_Player_Run;
         public InputAction @Crouch => m_Wrapper.m_Player_Crouch;
+        public InputAction @RightStick => m_Wrapper.m_Player_RightStick;
+        public InputAction @Interact => m_Wrapper.m_Player_Interact;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -564,6 +631,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Crouch.started += instance.OnCrouch;
             @Crouch.performed += instance.OnCrouch;
             @Crouch.canceled += instance.OnCrouch;
+            @RightStick.started += instance.OnRightStick;
+            @RightStick.performed += instance.OnRightStick;
+            @RightStick.canceled += instance.OnRightStick;
+            @Interact.started += instance.OnInteract;
+            @Interact.performed += instance.OnInteract;
+            @Interact.canceled += instance.OnInteract;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -586,6 +659,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Crouch.started -= instance.OnCrouch;
             @Crouch.performed -= instance.OnCrouch;
             @Crouch.canceled -= instance.OnCrouch;
+            @RightStick.started -= instance.OnRightStick;
+            @RightStick.performed -= instance.OnRightStick;
+            @RightStick.canceled -= instance.OnRightStick;
+            @Interact.started -= instance.OnInteract;
+            @Interact.performed -= instance.OnInteract;
+            @Interact.canceled -= instance.OnInteract;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -611,6 +690,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_DragonFlight_Yaw;
     private readonly InputAction m_DragonFlight_VerticalFlight;
     private readonly InputAction m_DragonFlight_ToggleFlight;
+    private readonly InputAction m_DragonFlight_Look;
     public struct DragonFlightActions
     {
         private @PlayerInputActions m_Wrapper;
@@ -619,6 +699,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         public InputAction @Yaw => m_Wrapper.m_DragonFlight_Yaw;
         public InputAction @VerticalFlight => m_Wrapper.m_DragonFlight_VerticalFlight;
         public InputAction @ToggleFlight => m_Wrapper.m_DragonFlight_ToggleFlight;
+        public InputAction @Look => m_Wrapper.m_DragonFlight_Look;
         public InputActionMap Get() { return m_Wrapper.m_DragonFlight; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -640,6 +721,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @ToggleFlight.started += instance.OnToggleFlight;
             @ToggleFlight.performed += instance.OnToggleFlight;
             @ToggleFlight.canceled += instance.OnToggleFlight;
+            @Look.started += instance.OnLook;
+            @Look.performed += instance.OnLook;
+            @Look.canceled += instance.OnLook;
         }
 
         private void UnregisterCallbacks(IDragonFlightActions instance)
@@ -656,6 +740,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @ToggleFlight.started -= instance.OnToggleFlight;
             @ToggleFlight.performed -= instance.OnToggleFlight;
             @ToggleFlight.canceled -= instance.OnToggleFlight;
+            @Look.started -= instance.OnLook;
+            @Look.performed -= instance.OnLook;
+            @Look.canceled -= instance.OnLook;
         }
 
         public void RemoveCallbacks(IDragonFlightActions instance)
@@ -681,6 +768,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         void OnJump(InputAction.CallbackContext context);
         void OnRun(InputAction.CallbackContext context);
         void OnCrouch(InputAction.CallbackContext context);
+        void OnRightStick(InputAction.CallbackContext context);
+        void OnInteract(InputAction.CallbackContext context);
     }
     public interface IDragonFlightActions
     {
@@ -688,5 +777,6 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         void OnYaw(InputAction.CallbackContext context);
         void OnVerticalFlight(InputAction.CallbackContext context);
         void OnToggleFlight(InputAction.CallbackContext context);
+        void OnLook(InputAction.CallbackContext context);
     }
 }

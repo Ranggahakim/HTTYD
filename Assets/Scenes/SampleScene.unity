@@ -278,6 +278,9 @@ MonoBehaviour:
         m_CallState: 2
   playerMovementScript: {fileID: 140266822}
   playerVisuals: {fileID: 988909032}
+  thirdPersonCamera: {fileID: 330585548}
+  dragonLocalPosOnPlayer: {x: 0, y: 0, z: 0}
+  dragonLocalRotOnPlayer: {x: 0, y: 0, z: 0, w: 1}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -428,17 +431,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4db2b54ec1d91340855fb37268bdc0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 140266827}
-  distance: 5
-  height: 2
-  cameraSpeed: 10
-  rotationSpeed: 3
+  playerTarget: {fileID: 140266827}
+  currentCameraTarget: {fileID: 0}
+  dragonController: {fileID: 1695624698}
+  groundCameraDistance: 5
+  groundCameraHeight: 2
+  groundCameraSpeed: 10
+  groundRotationSpeed: 3
+  flightCameraDistance: 10
+  flightCameraHeight: 3
+  flightCameraSmoothSpeed: 8
+  flightRotationSpeed: 3
+  maxFlightLookYawAngle: 25
+  maxFlightLookPitchAngle: 25
+  flightLookSensitivity: 1
+  minSpeedDistance: 5
+  maxSpeedDistance: 15
+  speedDistanceTransitionSpeed: 5
   obstructionMask:
     serializedVersion: 2
     m_Bits: 8
   zoomSpeed: 5
-  minDistance: 1
-  maxDistance: 7
+  minObstructionDistance: 1
+  maxObstructionDistance: 7
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -1400,18 +1415,25 @@ MonoBehaviour:
   speedLossOnClimb: 1
   speedGainOnDive: 1.5
   maxDiveSpeedMultiplier: 2
-  currentSpeed: 0
+  <CurrentSpeed>k__BackingField: 0
   minVerticalSpeed: 3
   maxVerticalSpeedFactor: 0.5
   verticalRampUpTime: 1.5
   verticalRampDownSpeed: 3
+  verticalInertia: 3
   yawSpeed: 90
+  dragonVisualsTransform: {fileID: 0}
   visualPitchAngle: 30
   visualRollAngle: 45
   visualRotationSmoothness: 10
   visualRotationRampUpTime: 1
   minVisualRotationFactor: 0.1
   visualRotationReturnSpeed: 8
+  visualRotationInertia: 4
+  mainCamera: {fileID: 0}
+  defaultCameraFOV: 60
+  maxCameraFOV: 75
+  cameraFOVTransitionSpeed: 5
   onDragonDeactivated:
     m_PersistentCalls:
       m_Calls: []

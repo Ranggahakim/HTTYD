@@ -58,6 +58,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "RightStick",
+                    "type": "Value",
+                    "id": "46ae7f53-b897-4ba1-8eda-cd7ed0e2fe3c",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Interact",
+                    "type": "Button",
+                    "id": "3cb7925e-6a50-4eab-b4cd-fb5396fbcdc5",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -225,6 +243,39 @@
                     "action": "Crouch",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2144c1dc-e66c-4bd6-be29-b30ad43e3b15",
+                    "path": "<Gamepad>/rightStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RightStick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e55d3a12-39db-4ff3-a159-456dbd398880",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Interact",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "0bca2662-127e-4c33-b7a3-eaacce0061d0",
+                    "path": "<Gamepad>/buttonNorth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Interact",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
@@ -267,6 +318,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Look",
+                    "type": "Value",
+                    "id": "235acf99-147b-499e-9091-0866fb9b307a",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -275,7 +335,7 @@
                     "id": "cb55c06d-224c-4387-9135-d0a09c7f17b8",
                     "path": "<Keyboard>/w",
                     "interactions": "Press",
-                    "processors": "Normalize(max=1)",
+                    "processors": "",
                     "groups": "",
                     "action": "Throttle",
                     "isComposite": false,
@@ -286,7 +346,7 @@
                     "id": "e7743b79-40a9-4393-aab0-7fdb8cbf0b75",
                     "path": "<Keyboard>/s",
                     "interactions": "Press",
-                    "processors": "Normalize(max=-1)",
+                    "processors": "Invert",
                     "groups": "",
                     "action": "Throttle",
                     "isComposite": false,
@@ -294,21 +354,10 @@
                 },
                 {
                     "name": "",
-                    "id": "b32446fb-52a0-4d38-82da-bb3f2ff4a165",
-                    "path": "<Gamepad>/rightTrigger",
+                    "id": "a733e7b0-4126-419c-8019-4df0c21a3128",
+                    "path": "<Gamepad>/leftStick/y",
                     "interactions": "",
-                    "processors": "Normalize(max=1)",
-                    "groups": "",
-                    "action": "Throttle",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "31eae775-157c-4d53-82a7-dc367c8828a5",
-                    "path": "<Gamepad>/leftTrigger",
-                    "interactions": "",
-                    "processors": "Normalize(max=-1)",
+                    "processors": "",
                     "groups": "",
                     "action": "Throttle",
                     "isComposite": false,
@@ -319,7 +368,7 @@
                     "id": "c9c35e6c-c0fc-4641-83f9-4d0759bcf2d2",
                     "path": "<Keyboard>/a",
                     "interactions": "Press",
-                    "processors": "Normalize(max=-1)",
+                    "processors": "Invert",
                     "groups": "",
                     "action": "Yaw",
                     "isComposite": false,
@@ -352,7 +401,7 @@
                     "id": "14935ecb-44fe-48e1-a224-18b58342ee73",
                     "path": "<Keyboard>/space",
                     "interactions": "Press",
-                    "processors": "Normalize(max=1)",
+                    "processors": "",
                     "groups": "",
                     "action": "VerticalFlight",
                     "isComposite": false,
@@ -363,7 +412,7 @@
                     "id": "140f4882-bf02-4dda-b9d6-6d307f29631c",
                     "path": "<Keyboard>/leftCtrl",
                     "interactions": "Press",
-                    "processors": "Normalize(max=-1)",
+                    "processors": "Invert",
                     "groups": "",
                     "action": "VerticalFlight",
                     "isComposite": false,
@@ -371,21 +420,10 @@
                 },
                 {
                     "name": "",
-                    "id": "a3bc5812-5cd2-485e-9596-50ee1d68c0ca",
-                    "path": "<Gamepad>/rightShoulder",
+                    "id": "0b81796a-836e-421b-8a8b-cd5fb0dbe18f",
+                    "path": "<Gamepad>/rightStick/y",
                     "interactions": "",
-                    "processors": "Normalize(max=1)",
-                    "groups": "",
-                    "action": "VerticalFlight",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "89bd9f78-9eb7-472a-9425-f71fa623880f",
-                    "path": "<Gamepad>/leftShoulder",
-                    "interactions": "",
-                    "processors": "Normalize(max=-1)",
+                    "processors": "",
                     "groups": "",
                     "action": "VerticalFlight",
                     "isComposite": false,
@@ -410,6 +448,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "ToggleFlight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5a3d8926-f60f-441e-bc7e-f329748c24b2",
+                    "path": "<Mouse>/delta",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Look",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1f7142cb-bea7-4fd8-be12-a52b59eb3abc",
+                    "path": "<Gamepad>/rightStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Look",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
