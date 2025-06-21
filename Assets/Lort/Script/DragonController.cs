@@ -1,9 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
-
-// Hapus baris ini:
-// public class OnDragonSpeedChanged : UnityEvent<float> { }
-// public static OnDragonSpeedChanged onDragonSpeedChanged = new OnDragonSpeedChanged();
+using UnityEngine.InputSystem; // Tambahkan namespace ini
 
 public class DragonController : MonoBehaviour
 {
@@ -22,9 +19,7 @@ public class DragonController : MonoBehaviour
     [SerializeField] private float speedGainOnDive = 1.5f;
     [SerializeField] private float maxDiveSpeedMultiplier = 1.5f;
 
-    [field: SerializeField] public float CurrentSpeed { get; private set; } // Ganti ke public property
-    // Ubah: [SerializeField] private float currentSpeed;
-    // Menjadi: [field:SerializeField] public float CurrentSpeed { get; private set; }
+    [field: SerializeField] public float CurrentSpeed { get; private set; }
 
     [Header("Vertical Movement Settings")]
     [SerializeField] private float minVerticalSpeed = 3f;
@@ -67,6 +62,11 @@ public class DragonController : MonoBehaviour
     private float currentTargetPitch = 0f;
     private float currentTargetRoll = 0f;
 
+    // --- VARIABEL BARU UNTUK INPUT ACTIONS ---
+    private PlayerInputActions playerInputActions;
+    private Vector2 moveInput;
+    private float verticalMovementRawInput; // Untuk Space/LControl
+
     void Awake()
     {
         dragonVisualsTransform = transform.Find("DragonVisuals");
@@ -84,12 +84,37 @@ public class DragonController : MonoBehaviour
                 Debug.LogWarning("DragonController: Main Camera tidak ditemukan! Pastikan ada Camera di scene dengan tag 'MainCamera'.");
             }
         }
+
+        // --- INISIALISASI INPUT ACTIONS ---
+        playerInputActions = new PlayerInputActions();
+
+        // Bind aksi Move (untuk horizontal dan vertikal pergerakan naga)
+        playerInputActions.Player.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
+        playerInputActions.Player.Move.canceled += ctx => moveInput = Vector2.zero;
+
+        // Bind aksi Climb (Space)
+        playerInputActions.Player.Jump.started += ctx => verticalMovementRawInput = 1f;
+        playerInputActions.Player.Jump.canceled += ctx => verticalMovementRawInput = 0f;
+
+        // Bind aksi Dive (LeftControl)
+        playerInputActions.Player.Crouch.started += ctx => verticalMovementRawInput = -1f;
+        playerInputActions.Player.Crouch.canceled += ctx => verticalMovementRawInput = 0f;
+    }
+
+    void OnEnable()
+    {
+        playerInputActions.Enable();
+    }
+
+    void OnDisable()
+    {
+        playerInputActions.Disable();
     }
 
     void Start()
     {
         isFlightActivated = false;
-        CurrentSpeed = 0f; // Gunakan CurrentSpeed
+        CurrentSpeed = 0f;
         verticalInputHoldTime = 0f;
         currentVerticalSpeed = 0f;
         if (dragonVisualsTransform != null)
@@ -109,7 +134,7 @@ public class DragonController : MonoBehaviour
         if (!isFlightActivated)
         {
             isFlightActivated = true;
-            CurrentSpeed = 0f; // Gunakan CurrentSpeed
+            CurrentSpeed = 0f;
             verticalInputHoldTime = 0f;
             currentVerticalSpeed = 0f;
             if (dragonVisualsTransform != null)
@@ -126,7 +151,7 @@ public class DragonController : MonoBehaviour
         if (isFlightActivated)
         {
             isFlightActivated = false;
-            CurrentSpeed = 0f; // Gunakan CurrentSpeed
+            CurrentSpeed = 0f;
             verticalInputHoldTime = 0f;
             currentVerticalSpeed = 0f;
             Debug.Log(gameObject.name + ": Penerbangan dinonaktifkan.");
@@ -141,7 +166,6 @@ public class DragonController : MonoBehaviour
             {
                 mainCamera.fieldOfView = defaultCameraFOV;
             }
-            // Hapus baris ini: onDragonSpeedChanged.Invoke(0f);
         }
     }
 
@@ -162,7 +186,8 @@ public class DragonController : MonoBehaviour
 
     void HandleFlightInput()
     {
-        float verticalInput = Input.GetAxis("Vertical");
+        // --- MENGGUNAKAN INPUT ACTIONS UNTUK MOVEMENT VERTIKAL (FORWARD/BACKWARD) ---
+        float verticalInput = moveInput.y;
 
         float targetBaseSpeed;
         if (verticalInput > 0)
@@ -180,28 +205,28 @@ public class DragonController : MonoBehaviour
 
         if (verticalInput > 0)
         {
-            CurrentSpeed = Mathf.Min(CurrentSpeed + acceleration * Time.deltaTime, forwardSpeed); // Gunakan CurrentSpeed
+            CurrentSpeed = Mathf.Min(CurrentSpeed + acceleration * Time.deltaTime, forwardSpeed);
         }
         else if (verticalInput < 0)
         {
             if (CurrentSpeed > 0)
             {
-                CurrentSpeed = Mathf.Max(CurrentSpeed - brakeAcceleration * Time.deltaTime, 0f); // Gunakan CurrentSpeed
+                CurrentSpeed = Mathf.Max(CurrentSpeed - brakeAcceleration * Time.deltaTime, 0f);
             }
             else
             {
-                CurrentSpeed = Mathf.Max(CurrentSpeed - acceleration * Time.deltaTime, reverseSpeed); // Gunakan CurrentSpeed
+                CurrentSpeed = Mathf.Max(CurrentSpeed - acceleration * Time.deltaTime, reverseSpeed);
             }
         }
         else
         {
             if (CurrentSpeed > 0)
             {
-                CurrentSpeed = Mathf.Max(CurrentSpeed - deceleration * Time.deltaTime, 0f); // Gunakan CurrentSpeed
+                CurrentSpeed = Mathf.Max(CurrentSpeed - deceleration * Time.deltaTime, 0f);
             }
             else if (CurrentSpeed < 0)
             {
-                CurrentSpeed = Mathf.Min(CurrentSpeed + deceleration * Time.deltaTime, 0f); // Gunakan CurrentSpeed
+                CurrentSpeed = Mathf.Min(CurrentSpeed + deceleration * Time.deltaTime, 0f);
             }
         }
 
@@ -210,41 +235,31 @@ public class DragonController : MonoBehaviour
 
         if (normalizedVerticalMovement > 0.1f)
         {
-            CurrentSpeed -= speedLossOnClimb * normalizedVerticalMovement * Time.deltaTime; // Gunakan CurrentSpeed
+            CurrentSpeed -= speedLossOnClimb * normalizedVerticalMovement * Time.deltaTime;
         }
         else if (normalizedVerticalMovement < -0.1f)
         {
-            CurrentSpeed += speedGainOnDive * Mathf.Abs(normalizedVerticalMovement) * Time.deltaTime; // Gunakan CurrentSpeed
-            CurrentSpeed = Mathf.Min(CurrentSpeed, forwardSpeed * maxDiveSpeedMultiplier); // Gunakan CurrentSpeed
+            CurrentSpeed += speedGainOnDive * Mathf.Abs(normalizedVerticalMovement) * Time.deltaTime;
+            CurrentSpeed = Mathf.Min(CurrentSpeed, forwardSpeed * maxDiveSpeedMultiplier);
         }
 
         if (verticalInput == 0)
         {
-            CurrentSpeed = Mathf.Clamp(CurrentSpeed, 0f, forwardSpeed); // Gunakan CurrentSpeed
+            CurrentSpeed = Mathf.Clamp(CurrentSpeed, 0f, forwardSpeed);
         }
         else if (CurrentSpeed < reverseSpeed && verticalInput >= 0)
         {
-            CurrentSpeed = Mathf.Lerp(CurrentSpeed, 0f, Time.deltaTime * deceleration); // Gunakan CurrentSpeed
+            CurrentSpeed = Mathf.Lerp(CurrentSpeed, 0f, Time.deltaTime * deceleration);
         }
 
-        transform.Translate(Vector3.forward * CurrentSpeed * Time.deltaTime, Space.Self); // Gunakan CurrentSpeed
+        transform.Translate(Vector3.forward * CurrentSpeed * Time.deltaTime, Space.Self);
 
-
-        float horizontalInput = Input.GetAxis("Horizontal");
+        // --- MENGGUNAKAN INPUT ACTIONS UNTUK MOVEMENT HORIZONTAL (YAW) ---
+        float horizontalInput = moveInput.x;
         float yawAmount = horizontalInput * yawSpeed * Time.deltaTime;
         transform.Rotate(Vector3.up, yawAmount, Space.Self);
 
-
-        float verticalMovementRawInput = 0f;
-        if (Input.GetKey(KeyCode.Space))
-        {
-            verticalMovementRawInput = 1f;
-        }
-        else if (Input.GetKey(KeyCode.LeftControl))
-        {
-            verticalMovementRawInput = -1f;
-        }
-
+        // --- MENGGUNAKAN VARIABEL BARU UNTUK VERTICAL MOVEMENT (Climb/Dive) ---
         if (verticalMovementRawInput != 0)
         {
             verticalInputHoldTime += Time.deltaTime;
@@ -258,7 +273,7 @@ public class DragonController : MonoBehaviour
 
         float verticalRampFactor = Mathf.Clamp01(verticalInputHoldTime / verticalRampUpTime);
 
-        float normalizedCurrentSpeed = Mathf.InverseLerp(0, forwardSpeed, Mathf.Abs(CurrentSpeed)); // Gunakan CurrentSpeed
+        float normalizedCurrentSpeed = Mathf.InverseLerp(0, forwardSpeed, Mathf.Abs(CurrentSpeed));
 
         float currentSpeedInfluence = normalizedCurrentSpeed * (maxVerticalSpeedFactor * forwardSpeed - minVerticalSpeed);
         float baseVerticalSpeed = minVerticalSpeed + currentSpeedInfluence;
@@ -276,13 +291,12 @@ public class DragonController : MonoBehaviour
 
         transform.Translate(Vector3.up * currentVerticalSpeed * Time.deltaTime, Space.World);
 
-
         if (dragonVisualsTransform != null)
         {
             float visualRotationRampFactorPitch = Mathf.Clamp01(verticalInputHoldTime / visualRotationRampUpTime);
 
             float horizontalInputHoldTime = 0f;
-            if (horizontalInput != 0)
+            if (horizontalInput != 0) // Menggunakan horizontalInput dari moveInput
             {
                 horizontalInputHoldTime += Time.deltaTime;
                 horizontalInputHoldTime = Mathf.Clamp(horizontalInputHoldTime, 0f, visualRotationRampUpTime);
@@ -305,7 +319,6 @@ public class DragonController : MonoBehaviour
                 lerpSpeedVisualPitch = visualRotationInertia;
             }
             currentTargetPitch = Mathf.Lerp(currentTargetPitch, -verticalMovementRawInput * calculatedPitchAngle, Time.deltaTime * lerpSpeedVisualPitch);
-
 
             float lerpSpeedVisualRoll = visualRotationSmoothness;
             if (Mathf.Sign(-horizontalInput) != Mathf.Sign(currentTargetRoll) && currentTargetRoll != 0)
@@ -332,7 +345,7 @@ public class DragonController : MonoBehaviour
     {
         if (mainCamera == null) return;
 
-        float normalizedSpeed = Mathf.InverseLerp(0, forwardSpeed, Mathf.Abs(CurrentSpeed)); // Gunakan CurrentSpeed
+        float normalizedSpeed = Mathf.InverseLerp(0, forwardSpeed, Mathf.Abs(CurrentSpeed));
 
         float targetFOV = Mathf.Lerp(defaultCameraFOV, maxCameraFOV, normalizedSpeed);
         mainCamera.fieldOfView = Mathf.Lerp(mainCamera.fieldOfView, targetFOV, Time.deltaTime * cameraFOVTransitionSpeed);

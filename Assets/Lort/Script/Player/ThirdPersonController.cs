@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem; // Tambahkan namespace ini
 
 [RequireComponent(typeof(CharacterController))]
 public class ThirdPersonController : MonoBehaviour
@@ -35,6 +36,11 @@ public class ThirdPersonController : MonoBehaviour
 
     private Animator animator;
 
+    // --- VARIABEL BARU UNTUK INPUT ACTIONS ---
+    private PlayerInputActions playerInputActions;
+    private Vector2 moveInput;
+    private bool isRunningInput;
+
     void Awake()
     {
         controller = GetComponent<CharacterController>();
@@ -46,6 +52,33 @@ public class ThirdPersonController : MonoBehaviour
 
         originalControllerHeight = controller.height;
         originalControllerCenter = controller.center;
+
+        // --- INISIALISASI INPUT ACTIONS ---
+        playerInputActions = new PlayerInputActions();
+
+        // Bind aksi Move
+        playerInputActions.Player.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
+        playerInputActions.Player.Move.canceled += ctx => moveInput = Vector2.zero;
+
+        // Bind aksi Jump
+        playerInputActions.Player.Jump.performed += OnJump;
+
+        // Bind aksi Run
+        playerInputActions.Player.Run.started += ctx => isRunningInput = true;
+        playerInputActions.Player.Run.canceled += ctx => isRunningInput = false;
+
+        // Bind aksi Crouch
+        playerInputActions.Player.Crouch.performed += OnCrouch;
+    }
+
+    void OnEnable()
+    {
+        playerInputActions.Enable();
+    }
+
+    void OnDisable()
+    {
+        playerInputActions.Disable();
     }
 
     void Update()
@@ -58,9 +91,8 @@ public class ThirdPersonController : MonoBehaviour
             yVelocity = -2f;
         }
 
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
-        Vector3 inputDirection = new Vector3(horizontal, 0f, vertical).normalized;
+        // --- MENGGUNAKAN INPUT ACTIONS UNTUK MOVEMENT ---
+        Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
 
         if (inputDirection.magnitude >= 0.1f)
         {
@@ -75,7 +107,8 @@ public class ThirdPersonController : MonoBehaviour
             {
                 currentSpeed = crouchSpeed;
             }
-            else if (Input.GetKey(KeyCode.LeftShift))
+            // --- MENGGUNAKAN INPUT ACTIONS UNTUK RUN ---
+            else if (isRunningInput)
             {
                 currentSpeed = runSpeed;
             }
@@ -84,49 +117,6 @@ public class ThirdPersonController : MonoBehaviour
         else
         {
             moveDirection = Vector3.zero;
-        }
-
-        if (Input.GetButtonDown("Jump") && isGrounded && !isCrouching)
-        {
-            yVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
-            if (animator != null)
-            {
-                animator.SetTrigger("Jump");
-            }
-        }
-
-        // Crouch Input - BAGIAN YANG DIUBAH/DITAMBAH
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            if (isCrouching) // Jika sedang menunduk dan mencoba berdiri
-            {
-                // Lakukan pengecekan di atas kepala sebelum berdiri
-                // Kita akan menggunakan Physics.CheckSphere di titik ceilingCheck
-                bool ceilingBlocked = Physics.CheckSphere(ceilingCheck.position, ceilingCheckRadius, obstacleMask);
-
-                if (!ceilingBlocked) // Jika tidak ada halangan di atas
-                {
-                    isCrouching = false; // Boleh berdiri
-                    controller.height = originalControllerHeight;
-                    controller.center = originalControllerCenter;
-                    if (animator != null)
-                    {
-                        animator.SetBool("IsCrouching", isCrouching);
-                    }
-                }
-                // Jika ada halangan, isCrouching tetap true, karakter tetap menunduk, tidak terjadi apa-apa
-                // Kamu bisa menambahkan feedback visual/audio di sini jika mau (misal: "Tidak bisa berdiri!")
-            }
-            else // Jika sedang berdiri dan mencoba menunduk
-            {
-                isCrouching = true; // Langsung menunduk
-                controller.height = originalControllerHeight / 2f;
-                controller.center = originalControllerCenter - new Vector3(0, originalControllerHeight / 4f, 0);
-                if (animator != null)
-                {
-                    animator.SetBool("IsCrouching", isCrouching);
-                }
-            }
         }
 
         yVelocity += gravity * Time.deltaTime;
@@ -139,6 +129,50 @@ public class ThirdPersonController : MonoBehaviour
             float currentMoveSpeed = new Vector3(controller.velocity.x, 0, controller.velocity.z).magnitude;
             animator.SetFloat("Speed", currentMoveSpeed / runSpeed);
             animator.SetBool("IsGrounded", isGrounded);
+            // Animator IsCrouching diatur di OnCrouch
+        }
+    }
+
+    // --- METHOD BARU UNTUK JUMP (DIPANGGIL DARI INPUT ACTIONS) ---
+    private void OnJump(InputAction.CallbackContext context)
+    {
+        if (isGrounded && !isCrouching)
+        {
+            yVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            if (animator != null)
+            {
+                animator.SetTrigger("Jump");
+            }
+        }
+    }
+
+    // --- METHOD BARU UNTUK CROUCH (DIPANGGIL DARI INPUT ACTIONS) ---
+    private void OnCrouch(InputAction.CallbackContext context)
+    {
+        if (isCrouching) // Jika sedang menunduk dan mencoba berdiri
+        {
+            bool ceilingBlocked = Physics.CheckSphere(ceilingCheck.position, ceilingCheckRadius, obstacleMask);
+
+            if (!ceilingBlocked) // Jika tidak ada halangan di atas
+            {
+                isCrouching = false; // Boleh berdiri
+                controller.height = originalControllerHeight;
+                controller.center = originalControllerCenter;
+                if (animator != null)
+                {
+                    animator.SetBool("IsCrouching", isCrouching);
+                }
+            }
+        }
+        else // Jika sedang berdiri dan mencoba menunduk
+        {
+            isCrouching = true; // Langsung menunduk
+            controller.height = originalControllerHeight / 2f;
+            controller.center = originalControllerCenter - new Vector3(0, originalControllerHeight / 4f, 0);
+            if (animator != null)
+            {
+                animator.SetBool("IsCrouching", isCrouching);
+            }
         }
     }
 

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem; // Tambahkan namespace ini
 
 public class ThirdPersonCamera : MonoBehaviour
 {
@@ -8,7 +9,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
     [Header("Camera Settings")]
     public float distance = 5f; // Jarak kamera default dari target (saat lambat)
-    public float height = 2f;   // Ketinggian kamera dari target
+    public float height = 2f;    // Ketinggian kamera dari target
     public float cameraSpeed = 10f; // Kecepatan interpolasi kamera mengikuti target
     public float rotationSpeed = 3f; // Kecepatan rotasi kamera dengan mouse
 
@@ -26,6 +27,10 @@ public class ThirdPersonCamera : MonoBehaviour
     private float currentX = 0.0f;
     private float currentY = 0.0f;
     private float currentEffectiveDistance; // Jarak kamera saat ini, hasil kombinasi speed & obstruction
+
+    // --- VARIABEL BARU UNTUK INPUT ACTIONS ---
+    private PlayerInputActions playerInputActions;
+    private Vector2 lookInput;
 
     void Awake()
     {
@@ -53,6 +58,23 @@ public class ThirdPersonCamera : MonoBehaviour
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+
+        // --- INISIALISASI INPUT ACTIONS ---
+        playerInputActions = new PlayerInputActions();
+
+        // Bind aksi Look
+        playerInputActions.Player.Look.performed += ctx => lookInput = ctx.ReadValue<Vector2>();
+        playerInputActions.Player.Look.canceled += ctx => lookInput = Vector2.zero;
+    }
+
+    void OnEnable()
+    {
+        playerInputActions.Enable();
+    }
+
+    void OnDisable()
+    {
+        playerInputActions.Disable();
     }
 
     void LateUpdate()
@@ -73,15 +95,15 @@ public class ThirdPersonCamera : MonoBehaviour
 
     void HandleInput()
     {
-        currentX += Input.GetAxis("Mouse X") * rotationSpeed;
-        currentY -= Input.GetAxis("Mouse Y") * rotationSpeed;
+        // --- MENGGUNAKAN INPUT ACTIONS UNTUK LOOK ---
+        currentX += lookInput.x * rotationSpeed;
+        currentY -= lookInput.y * rotationSpeed;
         currentY = Mathf.Clamp(currentY, -60f, 60);
     }
 
     // Ubah parameter: tambahkan float baseDistance
     void HandleCameraPosition(float baseDistance)
     {
-        // currentDistance sudah tidak relevan di sini. Kita pakai currentEffectiveDistance.
         Quaternion rotation = Quaternion.Euler(currentY, currentX, 0);
         Vector3 desiredPosition = target.position + rotation * new Vector3(0, height, -currentEffectiveDistance); // Gunakan currentEffectiveDistance
 
